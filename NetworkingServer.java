@@ -4,37 +4,19 @@ import java.io.*;
 public class NetworkingServer {
 
     public static void main(String [] args) {
+        // Välj ett lämpligt portnummer
+        int portnumber = 8080;
 
-        ServerSocket server = null; 
-        Socket client;
-
-        // Default port number we are going to use 
-        int portnumber = 1234;
-
-        if (args.length > 1) {
-
-            portnumber = Integer.parseInt(args[0]);
-        }
+        ServerSocket server = null;
+        Socket client = null;
 
         try {
-            // Create Server side socket 
-            server = new ServerSocket (portnumber);
+            // Skapa en serversocket
+            server = new ServerSocket(portnumber);
+            System.out.println("ServerSocket is created on port " + portnumber);
 
-        } catch (IOException ie) { 
-            System.out.println( "Cannot open socket." + ie);
-            System.exit(1);
-        }
-
-        System.out.println("ServerSocket is created "+ server);
-
-        // Wait for the data from the client and reply 
-        while(true) {
-
-            try {
-
-                // Listens for a connection to be made to 
-                // this socket and accepts it. The method blocks until
-                // a connection is made
+            // Vänta på data från klienten och svara
+            while(true) {
                 System.out.println("Waiting for connect request..."); 
                 client = server.accept();
                 System.out.println("Connect request is accepted..."); 
@@ -42,32 +24,40 @@ public class NetworkingServer {
                 int clientPort = client.getPort();
                 System.out.println("Client host = " + clientHost + " Client port = " + clientPort);
 
-                // Read data from the client
+                // Läs data från klienten
                 InputStream clientIn = client.getInputStream(); 
-                BufferedReader br = new BufferedReader (new InputStreamReader (clientIn));
+                BufferedReader br = new BufferedReader(new InputStreamReader(clientIn));
+                String msgFromClient = br.readLine(); 
+                System.out.println("Message received from client = " + msgFromClient);
 
-                string msgFromClient = br.readLine(); 
-                System.out.print ln("Message received from client = "
-
-                // Send response to the client 
-                if (msgFromclient != null && ! msgFromClient.equalsIgnoreCase("bye")) {
-
-                    OutputStream clientout = client.getoutputStream();
-                    PrintWriter pw = new Printwriter(clientout, true); 
+                // Skicka svar till klienten
+                if (msgFromClient != null && !msgFromClient.equalsIgnoreCase("bye")) {
+                    OutputStream clientOut = client.getOutputStream();
+                    PrintWriter pw = new PrintWriter(clientOut, true); 
                     String ansMsg = "Hello, " + msgFromClient;
-                    pw.print ln(ansMsg);
+                    pw.println(ansMsg);
                 }
 
-                // Close sockets
-                if (msgFromclient != null && msgFromclient.equalsIgnoreCase("bye")) {
-
-                    server.close();
-                    client.close();
+                // Stäng buffrar och strömmar
+                br.close();
+                client.close();
+                
+                // Avsluta loopen om meddelandet är "bye"
+                if (msgFromClient != null && msgFromClient.equalsIgnoreCase("bye")) {
                     break;
                 }
-            } catch (IOException ie) {
-
-                // Skriv ett lämpligt error meddelande
+            }
+        } catch (IOException ie) {
+            // Skriv ut felmeddelande om något går fel
+            System.out.println("An error occurred: " + ie.getMessage());
+        } finally {
+            // Stäng serversocketen när den inte längre behövs
+            try {
+                if (server != null) {
+                    server.close();
+                }
+            } catch (IOException e) {
+                System.out.println("An error occurred while closing the server socket: " + e.getMessage());
             }
         }
     }
